@@ -9,7 +9,7 @@ function getMoney() {
     return tongtien;
 }
 
-unction showThongKe(arr, mode) {
+function showThongKe(arr, mode) {
     // Merge sản phẩm giống nhau
     let mergeObj = [];
     arr.forEach(item => {
