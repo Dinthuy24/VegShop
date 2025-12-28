@@ -10,6 +10,31 @@ function checkLogin() {
     }
 }
 
+function vnd(price) {
+    return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
+}
+
+function formatDate(date) {
+    let fm = new Date(date);
+    let yyyy = fm.getFullYear();
+    let mm = fm.getMonth() + 1;
+    let dd = fm.getDate();
+    if (dd < 10) dd = "0" + dd;
+    if (mm < 10) mm = "0" + mm;
+    return dd + "/" + mm + "/" + yyyy;
+}
+
+// Hàm khởi tạo ID tự động
+function createId(arr) {
+    let id = arr.length;
+    let check = arr.find((item) => item.id == id);
+    while (check != null) {
+        id++;
+        check = arr.find((item) => item.id == id);
+    }
+    return id;
+}
+
 window.onload = function() {
     checkLogin();
 
@@ -440,6 +465,76 @@ function changeStatus(id, el) {
     findOrder(); // Refresh lại danh sách
 }
 
+/* ==============================================
+   DASHBOARD & THỐNG KÊ
+   ============================================== */
+   function getAmoumtProduct() {
+    let products = localStorage.getItem("products") ? JSON.parse(localStorage.getItem("products")) : [];
+    return products.length;
+}
+
+function getAmoumtUser() {
+    let accounts = localStorage.getItem("accounts") ? JSON.parse(localStorage.getItem("accounts")) : [];
+    return accounts.filter(item => item.userType == 0).length;
+}
+
+function getMoney() {
+    let tongtien = 0;
+    let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
+    orders.forEach(item => {
+        if(item.trangthai == 1) { // Chỉ tính đơn đã xử lý
+            tongtien += item.tongtien;
+        }
+    });
+    return tongtien;
+}
+
+function thongKe(mode) {
+    let categoryTk = document.getElementById("the-loai-tk").value;
+    let ct = document.getElementById("form-search-tk").value;
+    let timeStart = document.getElementById("time-start-tk").value;
+    let timeEnd = document.getElementById("time-end-tk").value;
+
+    let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
+    let products = localStorage.getItem("products") ? JSON.parse(localStorage.getItem("products")) : [];
+    let orderDetails = localStorage.getItem("orderDetails") ? JSON.parse(localStorage.getItem("orderDetails")) : [];
+    
+    // Tạo mảng thống kê chi tiết
+    let arrDetail = [];
+    orderDetails.forEach(item => {
+        let prod = products.find(p => p.id == item.id);
+        if(prod) { // Chỉ thống kê sản phẩm còn tồn tại
+            let order = orders.find(o => o.id == item.madon);
+            if(order && order.trangthai == 1) { // Chỉ tính đơn đã thành công
+                arrDetail.push({
+                    id: item.id,
+                    madon: item.madon,
+                    price: item.price,
+                    quantity: item.soluong,
+                    category: prod.category,
+                    title: prod.title,
+                    img: prod.img,
+                    time: order.thoigiandat
+                });
+            }
+        }
+    });
+
+    // Filter logic
+    let result = categoryTk == "Tất cả" ? arrDetail : arrDetail.filter((item) => item.category == categoryTk);
+    result = ct == "" ? result : result.filter((item) => item.title.toLowerCase().includes(ct.toLowerCase()));
+
+    if (timeStart != "" && timeEnd == "") {
+        result = result.filter((item) => new Date(item.time) > new Date(timeStart).setHours(0, 0, 0));
+    } else if (timeStart == "" && timeEnd != "") {
+        result = result.filter((item) => new Date(item.time) < new Date(timeEnd).setHours(23, 59, 59));
+    } else if (timeStart != "" && timeEnd != "") {
+        result = result.filter((item) => new Date(item.time) > new Date(timeStart).setHours(0, 0, 0) && new Date(item.time) < new Date(timeEnd).setHours(23, 59, 59));
+    }
+    
+    showThongKe(result, mode);
+}
+
 function showThongKe(arr, mode) {
     // Merge sản phẩm giống nhau
     let mergeObj = [];
@@ -479,6 +574,12 @@ function showThongKe(arr, mode) {
         </tr>`;
     });
     document.getElementById("showTk").innerHTML = orderHtml;
+}
+
+function detailOrderProduct(id) {
+    // Hàm này cần viết lại logic lấy chi tiết các đơn có chứa sản phẩm ID này nếu cần thiết
+    // Hiện tại để trống hoặc hiển thị thông báo
+    alert("Chức năng xem chi tiết lịch sử bán của sản phẩm này đang phát triển.");
 }
 
 let logoutBtn = document.getElementById("logout-acc");
