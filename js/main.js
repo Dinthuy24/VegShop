@@ -1,3 +1,4 @@
+
 function vnd(price) {
     return price.toLocaleString('vi-VN', { style: 'currency', currency: 'VND' });
 }
@@ -121,7 +122,7 @@ function detailProduct(index) {
         orderNowBtn.addEventListener('click', (e) => {
             if (localStorage.getItem('currentuser')) {
                 // Kiểm tra nếu số lượng mua > tồn kho
-                if (parseInt(qty.value) > infoProduct.quantity) {
+                if(parseInt(qty.value) > infoProduct.quantity) {
                     toast({ title: 'Lỗi', message: 'Sản phẩm không đủ số lượng!', type: 'error', duration: 3000 });
                     return;
                 }
@@ -416,6 +417,8 @@ function closeCart() {
     updateAmount();
 }
 
+// --- TÌM KIẾM SẢN PHẨM ---
+
 document.querySelector(".filter-btn").addEventListener("click", (e) => {
     e.preventDefault();
     document.querySelector(".advanced-search").classList.toggle("open");
@@ -449,6 +452,8 @@ function closeSearchMb() {
     }
 }
 
+// --- XỬ LÝ LOGIN / SIGNUP ---
+
 function openLoginModal() {
     let formsg = document.querySelector('.modal.signup-login');
     let container = document.querySelector('.signup-login .modal-container');
@@ -481,6 +486,7 @@ if (loginLink) {
     });
 }
 
+// Chức năng Đăng ký
 let signupButton = document.getElementById('signup-button');
 if (signupButton) {
     signupButton.addEventListener('click', (event) => {
@@ -491,7 +497,7 @@ if (signupButton) {
         let passwordConfirmation = document.getElementById('password_confirmation').value;
         let checkSignup = document.getElementById('checkbox-signup').checked;
 
-
+        
         if (fullNameUser.length == 0) {
             document.querySelector('.form-message-name').innerHTML = 'Vui lòng nhập họ và tên';
             document.getElementById('fullname').focus();
@@ -556,13 +562,13 @@ if (signupButton) {
                     accounts.push(user);
                     localStorage.setItem('accounts', JSON.stringify(accounts));
                     toast({ title: 'Thành công', message: 'Tạo thành công tài khoản !', type: 'success', duration: 3000 });
-
+                    
                     // Chuyển sang tab đăng nhập
                     document.querySelector('.signup-login .modal-container').classList.add('active');
                     // Điền sẵn thông tin
                     document.getElementById('phone-login').value = user.phone;
                     document.getElementById('password-login').focus();
-
+                    
                     // Clear form
                     document.getElementById('fullname').value = '';
                     document.getElementById('phone').value = '';
@@ -617,32 +623,32 @@ if (loginBtn) {
                     let giohangTam = JSON.parse(localStorage.getItem('giohang')) || [];
                     let currentUser = accounts[vitri];
 
-                    if (giohangTam.length > 0) {
-                        giohangTam.forEach(itemTam => {
-                            let itemUser = currentUser.cart.find(i => i.id == itemTam.id);
-                            if (itemUser) {
-                                itemUser.soluong += itemTam.soluong;
-                            } else {
-                                currentUser.cart.push(itemTam);
-                            }
-                        });
-                        // Xóa giỏ hàng tạm sau khi gộp
-                        localStorage.removeItem('giohang');
+                    if(giohangTam.length > 0) {
+                         giohangTam.forEach(itemTam => {
+                             let itemUser = currentUser.cart.find(i => i.id == itemTam.id);
+                             if(itemUser) {
+                                 itemUser.soluong += itemTam.soluong;
+                             } else {
+                                 currentUser.cart.push(itemTam);
+                             }
+                         });
+                         // Xóa giỏ hàng tạm sau khi gộp
+                         localStorage.removeItem('giohang');
                     }
-
+                    
                     // Lưu lại user và danh sách accounts
                     localStorage.setItem('currentuser', JSON.stringify(currentUser));
                     accounts[vitri] = currentUser;
                     localStorage.setItem('accounts', JSON.stringify(accounts));
-
+                    
                     toast({ title: 'Success', message: 'Đăng nhập thành công', type: 'success', duration: 3000 });
                     closeModal();
-
+                    
                     // Cập nhật lại giao diện ngay lập tức
                     kiemtradangnhap();
                     updateAmount();
                     // Nếu đang mở giỏ hàng thì load lại để thấy giỏ hàng đã gộp
-                    if (document.querySelector('.modal-cart').classList.contains('open')) {
+                    if(document.querySelector('.modal-cart').classList.contains('open')) {
                         showCart();
                     }
                 }
@@ -652,6 +658,370 @@ if (loginBtn) {
         }
     })
 }
+
+// --- LOGIC KIỂM TRA ĐĂNG NHẬP (ĐÃ SỬA LỖI ACCESS DENIED) ---
+
+function kiemtradangnhap() {
+    let currentUser = localStorage.getItem('currentuser');
+    let authContainer = document.querySelector('.auth-container');
+    let menuUser = document.querySelector('.header-middle-right-menu');
+    let cartIcon = document.querySelector('.header-middle-right-item.open[onclick="openCart()"]');
+
+    if (currentUser != null) {
+        let user = JSON.parse(currentUser);
+
+        // Hiển thị tên tài khoản
+        if (authContainer) {
+            authContainer.innerHTML = `
+                <span class="text-tk">${user.fullname} <i class="fa-sharp fa-solid fa-caret-down"></i></span>
+                <span class="text-dndk" style="font-size: 11px; color: gray;">Đã đăng nhập</span>`;
+        }
+
+        let menuHtml = '';
+
+        // Kiểm tra Admin hay Khách hàng
+        if (user.userType == 1) {
+            // === ADMIN ===
+            if (cartIcon) cartIcon.style.display = 'none'; // Admin không mua hàng
+            menuHtml += `<li><a href="./admin.html"><i class="fa-light fa-gear"></i> Trang quản trị</a></li>`;
+            menuHtml += `<li><a href="javascript:;" onclick="logOut()"><i class="fa-light fa-right-from-bracket"></i> Đăng xuất</a></li>`;
+        } else {
+            // === KHÁCH HÀNG (userType = 0) ===
+            // KHÔNG CÓ LOGIC CHẶN ACCESS DENIED Ở ĐÂY!
+            if (cartIcon) cartIcon.style.display = 'block'; // Hiện giỏ hàng
+            menuHtml += `<li><a href="javascript:;" onclick="myAccount()"><i class="fa-light fa-circle-user"></i> Tài khoản của tôi</a></li>`;
+            menuHtml += `<li><a href="javascript:;" onclick="orderHistory()"><i class="fa-regular fa-clipboard-list"></i> Đơn hàng đã mua</a></li>`;
+            menuHtml += `<li class="border"><a href="javascript:;" onclick="logOut()"><i class="fa-light fa-right-from-bracket"></i> Đăng xuất</a></li>`;
+        }
+
+        if (menuUser) menuUser.innerHTML = menuHtml;
+
+    } else {
+        // === CHƯA ĐĂNG NHẬP ===
+        if (cartIcon) cartIcon.style.display = 'block'; // Vẫn hiện giỏ hàng
+        
+        if (authContainer) {
+            authContainer.innerHTML = `
+                <span class="text-dndk">Đăng nhập / Đăng ký</span>
+                <span class="text-tk">Tài khoản <i class="fa-sharp fa-solid fa-caret-down"></i></span>`;
+        }
+
+        if (menuUser) {
+            menuUser.innerHTML = `
+                <li><a id="login" href="javascript:;" onclick="openLoginModal()"><i class="fa-light fa-right-to-bracket"></i> Đăng nhập</a></li>
+                <li><a id="signup" href="javascript:;" onclick="openSignupModal()"><i class="fa-light fa-user-plus"></i> Đăng ký</a></li>
+            `;
+        }
+    }
+}
+
+// Đăng xuất
+function logOut() {
+    let accounts = JSON.parse(localStorage.getItem('accounts'));
+    let user = JSON.parse(localStorage.getItem('currentuser'));
+    
+    if (user && accounts) {
+        let vitri = accounts.findIndex(item => item.phone == user.phone);
+        if (vitri !== -1) {
+            accounts[vitri].cart = user.cart; // Lưu giỏ hàng
+            localStorage.setItem('accounts', JSON.stringify(accounts));
+        }
+    }
+    
+    localStorage.removeItem('currentuser');
+    window.location.href = "index.html"; // Quay về trang chủ
+}
+
+// Chuyển đổi trang
+function myAccount() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('trangchu').classList.add('hide');
+    document.getElementById('order-history').classList.remove('open');
+    document.getElementById('account-user').classList.add('open');
+    userInfo();
+}
+
+function orderHistory() {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    document.getElementById('account-user').classList.remove('open');
+    document.getElementById('trangchu').classList.add('hide');
+    document.getElementById('order-history').classList.add('open');
+    renderOrderProduct();
+}
+
+// Validate Email
+function emailIsValid(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
+}
+
+function userInfo() {
+    let user = JSON.parse(localStorage.getItem('currentuser'));
+    if (user) {
+        document.getElementById('infoname').value = user.fullname;
+        document.getElementById('infophone').value = user.phone;
+        document.getElementById('infoemail').value = user.email || '';
+        document.getElementById('infoaddress').value = user.address || '';
+    }
+}
+
+// Thay doi thong tin user
+function changeInformation() {
+    let accounts = JSON.parse(localStorage.getItem('accounts'));
+    let user = JSON.parse(localStorage.getItem('currentuser'));
+    let infoname = document.getElementById('infoname');
+    let infoemail = document.getElementById('infoemail');
+    let infoaddress = document.getElementById('infoaddress');
+
+    user.fullname = infoname.value;
+    if (infoemail.value.length > 0) {
+        if (!emailIsValid(infoemail.value)) {
+            document.querySelector('.inforemail-error').innerHTML = 'Vui lòng nhập lại email!';
+            return;
+        } else {
+            user.email = infoemail.value;
+        }
+    }
+
+    if (infoaddress.value.length > 0) {
+        user.address = infoaddress.value;
+    }
+
+    let vitri = accounts.findIndex(item => item.phone == user.phone)
+    if(vitri !== -1) {
+        accounts[vitri].fullname = user.fullname;
+        accounts[vitri].email = user.email;
+        accounts[vitri].address = user.address;
+        localStorage.setItem('accounts', JSON.stringify(accounts));
+    }
+    
+    localStorage.setItem('currentuser', JSON.stringify(user));
+    kiemtradangnhap();
+    toast({ title: 'Success', message: 'Cập nhật thông tin thành công !', type: 'success', duration: 3000 });
+}
+
+// Đổi mật khẩu 
+function changePassword() {
+    let currentUser = JSON.parse(localStorage.getItem("currentuser"));
+    let passwordCur = document.getElementById('password-cur-info');
+    let passwordAfter = document.getElementById('password-after-info');
+    let passwordConfirm = document.getElementById('password-comfirm-info');
+    let check = true;
+
+    // Validate logic...
+    if (passwordCur.value.length == 0) {
+        document.querySelector('.password-cur-info-error').innerHTML = 'Vui lòng nhập mật khẩu hiện tại';
+        check = false;
+    } else document.querySelector('.password-cur-info-error').innerHTML = '';
+
+    if (passwordAfter.value.length == 0) {
+        document.querySelector('.password-after-info-error').innerHTML = 'Vui lòng nhập mật khẩu mới';
+        check = false;
+    } else document.querySelector('.password-after-info-error').innerHTML = '';
+
+    if (passwordConfirm.value.length == 0) {
+        document.querySelector('.password-after-comfirm-error').innerHTML = 'Vui lòng nhập mật khẩu xác nhận';
+        check = false;
+    } else document.querySelector('.password-after-comfirm-error').innerHTML = '';
+
+    if (check) {
+        if (passwordCur.value == currentUser.password) {
+            if (passwordAfter.value.length < 6) {
+                document.querySelector('.password-after-info-error').innerHTML = 'Mật khẩu mới phải >= 6 kí tự';
+            } else {
+                if (passwordConfirm.value == passwordAfter.value) {
+                    currentUser.password = passwordAfter.value;
+                    localStorage.setItem('currentuser', JSON.stringify(currentUser));
+                    
+                    let accounts = JSON.parse(localStorage.getItem('accounts'));
+                    let accountChange = accounts.find(acc => acc.phone == currentUser.phone);
+                    if(accountChange) {
+                        accountChange.password = currentUser.password;
+                        localStorage.setItem('accounts', JSON.stringify(accounts));
+                    }
+                    toast({ title: 'Success', message: 'Đổi mật khẩu thành công !', type: 'success', duration: 3000 });
+                    // Clear inputs
+                    passwordCur.value = '';
+                    passwordAfter.value = '';
+                    passwordConfirm.value = '';
+                } else {
+                    document.querySelector('.password-after-comfirm-error').innerHTML = 'Mật khẩu xác nhận không khớp';
+                }
+            }
+        } else {
+            document.querySelector('.password-cur-info-error').innerHTML = 'Mật khẩu hiện tại không đúng';
+        }
+    }
+}
+
+function getProductInfo(id) {
+    let products = JSON.parse(localStorage.getItem('products'));
+    return products.find(item => item.id == id);
+}
+
+// Render Order History
+function renderOrderProduct() {
+    let currentUser = JSON.parse(localStorage.getItem('currentuser'));
+    let order = localStorage.getItem('order') ? JSON.parse(localStorage.getItem('order')) : [];
+    let orderHtml = "";
+    let arrDonHang = [];
+    
+    if (currentUser) {
+        arrDonHang = order.filter(item => item.khachhang === currentUser.phone);
+    }
+
+    // --- THÊM PHẦN LỌC NGÀY ---
+    // Tạo bộ lọc nếu chưa có
+    let filterSection = document.getElementById("order-history-filter");
+    if (!filterSection && document.querySelector(".main-account-header")) {
+        let header = document.querySelector(".main-account-header");
+        // Thêm HTML cho bộ lọc
+        let div = document.createElement("div");
+        div.id = "order-history-filter";
+        div.style.marginTop = "15px";
+        div.innerHTML = `
+            <label>Từ ngày: <input type="date" id="history-start" onchange="renderOrderProduct()"></label>
+            <label style="margin-left:10px;">Đến ngày: <input type="date" id="history-end" onchange="renderOrderProduct()"></label>
+        `;
+        header.appendChild(div);
+    }
+
+    // Lấy giá trị ngày để lọc
+    let startVal = document.getElementById("history-start") ? document.getElementById("history-start").value : "";
+    let endVal = document.getElementById("history-end") ? document.getElementById("history-end").value : "";
+
+    if (startVal) {
+        arrDonHang = arrDonHang.filter(item => new Date(item.thoigiandat) >= new Date(startVal));
+    }
+    if (endVal) {
+        arrDonHang = arrDonHang.filter(item => new Date(item.thoigiandat) <= new Date(endVal).setHours(23,59,59));
+    }
+    // ---------------------------
+
+    if (arrDonHang.length == 0) {
+        orderHtml = `<div class="empty-order-section"><img src="./assets/img/empty-order.jpg" alt="" class="empty-order-img"><p>Không tìm thấy đơn hàng nào</p></div>`;
+    } else {
+        
+        arrDonHang.forEach(item => {
+            let productHtml = `<div class="order-history-group">`;
+            let chiTietDon = getOrderDetails(item.id);
+            chiTietDon.forEach(sp => {
+                let infosp = getProductInfo(sp.id);
+                // Fix lỗi nếu sản phẩm bị xóa admin
+                let img = infosp ? infosp.img : './assets/img/blank-image.png';
+                let title = infosp ? infosp.title : 'Sản phẩm ngừng kinh doanh';
+                productHtml += `<div class="order-history">
+                    <div class="order-history-left">
+                        <img src="${img}" alt="">
+                        <div class="order-history-info">
+                            <h4>${title}</h4>
+                            <p class="order-history-note"><i class="fa-light fa-pen"></i> ${sp.note}</p>
+                            <p class="order-history-quantity">x${sp.soluong}</p>
+                        </div>
+                    </div>
+                    <div class="order-history-right">
+                        <div class="order-history-price">
+                            <span class="order-history-current-price">${vnd(sp.price)}</span>
+                        </div>
+                    </div>
+                </div>`;
+            });
+            let textCompl = item.trangthai == 1 ? "Đã xử lý" : "Đang xử lý";
+            let classCompl = item.trangthai == 1 ? "complete" : "no-complete"
+            productHtml += `<div class="order-history-control">
+                <div class="order-history-status">
+                    <span class="order-history-status-sp ${classCompl}">${textCompl}</span>
+                    <button id="order-history-detail" onclick="detailOrder('${item.id}')"><i class="fa-regular fa-eye"></i> Xem chi tiết</button>
+                </div>
+                <div class="order-history-total">
+                    <span class="order-history-total-desc">Tổng tiền: </span>
+                    <span class="order-history-toltal-price">${vnd(item.tongtien)}</span>
+                </div>
+            </div></div>`;
+            orderHtml += productHtml;
+        });
+    }
+    document.querySelector(".order-history-section").innerHTML = orderHtml;
+}
+
+function getOrderDetails(madon) {
+    let orderDetails = localStorage.getItem("orderDetails") ? JSON.parse(localStorage.getItem("orderDetails")) : [];
+    return orderDetails.filter(item => item.madon == madon);
+}
+
+function formatDate(date) {
+    let fm = new Date(date);
+    let yyyy = fm.getFullYear();
+    let mm = fm.getMonth() + 1;
+    let dd = fm.getDate();
+    if (dd < 10) dd = '0' + dd;
+    if (mm < 10) mm = '0' + mm;
+    return dd + '/' + mm + '/' + yyyy;
+}
+
+function detailOrder(id) {
+    let order = JSON.parse(localStorage.getItem("order"));
+    let detail = order.find(item => item.id == id);
+    document.querySelector(".modal.detail-order").classList.add("open");
+    let detailOrderHtml = `<ul class="detail-order-group">
+        <li class="detail-order-item">
+            <span class="detail-order-item-left"><i class="fa-light fa-calendar-days"></i> Ngày đặt hàng</span>
+            <span class="detail-order-item-right">${formatDate(detail.thoigiandat)}</span>
+        </li>
+        <li class="detail-order-item">
+            <span class="detail-order-item-left"><i class="fa-light fa-truck"></i> Hình thức giao</span>
+            <span class="detail-order-item-right">${detail.hinhthucgiao}</span>
+        </li>
+        <li class="detail-order-item">
+            <span class="detail-order-item-left"><i class="fa-light fa-clock"></i> Ngày nhận hàng</span>
+            <span class="detail-order-item-right">${(detail.thoigiangiao == "" ? "" : (detail.thoigiangiao + " - ")) + formatDate(detail.ngaygiaohang)}</span>
+        </li>
+        <li class="detail-order-item">
+            <span class="detail-order-item-left"><i class="fa-light fa-location-dot"></i> Địa điểm nhận</span>
+            <span class="detail-order-item-right">${detail.diachinhan}</span>
+        </li>
+        <li class="detail-order-item">
+            <span class="detail-order-item-left"><i class="fa-thin fa-person"></i> Người nhận</span>
+            <span class="detail-order-item-right">${detail.tenguoinhan}</span>
+        </li>
+        <li class="detail-order-item">
+            <span class="detail-order-item-left"><i class="fa-light fa-phone"></i> Số điện thoại nhận</span>
+            <span class="detail-order-item-right">${detail.sdtnhan}</span>
+        </li>
+    </ul>`
+    document.querySelector(".detail-order-content").innerHTML = detailOrderHtml;
+}
+
+function createId(arr) {
+    let id = arr.length + 1;
+    let check = arr.find(item => item.id == "DH" + id)
+    while (check != null) {
+        id++;
+        check = arr.find(item => item.id == "DH" + id)
+    }
+    return "DH" + id;
+}
+
+// Back to top
+window.onscroll = () => {
+    let backtopTop = document.querySelector(".back-to-top")
+    if (document.documentElement.scrollTop > 100) {
+        backtopTop.classList.add("active");
+    } else {
+        backtopTop.classList.remove("active");
+    }
+}
+
+// Auto hide header
+const headerNav = document.querySelector(".header-bottom");
+let lastScrollY = window.scrollY;
+window.addEventListener("scroll", () => {
+    if (lastScrollY < window.scrollY) {
+        headerNav.classList.add("hide")
+    } else {
+        headerNav.classList.remove("hide")
+    }
+    lastScrollY = window.scrollY;
+})
 
 // Page Render Products
 function renderProducts(showProduct) {
@@ -739,7 +1109,7 @@ function searchProducts(mode) {
             document.getElementById("advanced-search-category-select").value = "Tất cả";
             document.getElementById("min-price").value = "";
             document.getElementById("max-price").value = "";
-            result = productAll;
+            result = productAll; 
             break;
         case 1: // Tăng dần
             result.sort((a, b) => a.price - b.price);
@@ -797,3 +1167,25 @@ function paginationChange(page, productAll, currentPage) {
     })
     return node;
 }
+
+function showCategory(category) {
+    document.getElementById('trangchu').classList.remove('hide');
+    document.getElementById('account-user').classList.remove('open');
+    document.getElementById('order-history').classList.remove('open');
+    let productSearch = productAll.filter(value => {
+        return value.category.toString().toUpperCase().includes(category.toUpperCase());
+    })
+    let currentPageSeach = 1;
+    displayList(productSearch, perPage, currentPageSeach);
+    setupPagination(productSearch, perPage, currentPageSeach);
+    document.getElementById("home-title").scrollIntoView();
+}
+
+// Init
+window.onload = function () {
+    kiemtradangnhap();
+    updateAmount();
+    updateCartTotal();
+    let products = JSON.parse(localStorage.getItem('products')) || [];
+    showHomeProduct(products);
+};
