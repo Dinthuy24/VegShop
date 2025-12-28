@@ -106,17 +106,6 @@ modals.forEach(modal => {
 });
 
 
-function getMoney() {
-    let tongtien = 0;
-    let orders = localStorage.getItem("order") ? JSON.parse(localStorage.getItem("order")) : [];
-    orders.forEach(item => {
-        if(item.trangthai == 1) { // Chỉ tính đơn đã xử lý
-            tongtien += item.tongtien;
-        }
-    });
-    return tongtien;
-}
-
 /* ==============================================
     QUẢN LÝ SẢN PHẨM (PRODUCT)
    ============================================== */
