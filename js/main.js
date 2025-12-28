@@ -60,21 +60,53 @@ function detailProduct(index) {
         return sp.id === index;
     })
 
+    // --- KIỂM TRA QUYỀN ADMIN ---
     let currentUser = JSON.parse(localStorage.getItem('currentuser'));
     let isAdmin = currentUser && currentUser.userType == 1;
 
-    let buttonsHtml = '';
+    // --- CÁC PHẦN HTML CHỈ HIỆN KHI KHÔNG PHẢI ADMIN ---
+    
+    // 1. Ô chọn số lượng
+    let quantityHtml = '';
     if (!isAdmin) {
-        buttonsHtml = `
-        <div class="modal-footer-control">
-            <button class="button-dathangngay" data-product="${infoProduct.id}">Đặt hàng ngay</button>
-            <button class="button-dat" id="add-cart" onclick="animationCart()"><i class="fa-light fa-basket-shopping"></i></button>
+        quantityHtml = `
+        <div class="buttons_added">
+            <input class="minus is-form" type="button" value="-" onclick="decreasingNumber(this)">
+            <input class="input-qty" max="${infoProduct.quantity}" min="1" name="" type="number" value="1">
+            <input class="plus is-form" type="button" value="+" onclick="increasingNumber(this)">
         </div>`;
     }
 
+    // 2. Ô ghi chú
+    let noteHtml = '';
+    if (!isAdmin) {
+        noteHtml = `
+        <div class="notebox">
+            <p class="notebox-title">Ghi chú</p>
+            <textarea class="text-note" id="popup-detail-note" placeholder="Nhập thông tin cần lưu ý..."></textarea>
+        </div>`;
+    }
 
-    let modalHtml = `<div class="modal-header">
-    <img class="product-image" src="${infoProduct.img}" alt="">
+    // 3. Footer (Thành tiền + Nút bấm)
+    let footerHtml = '';
+    if (!isAdmin) {
+        footerHtml = `
+        <div class="modal-footer">
+            <div class="price-total">
+                <span class="thanhtien">Thành tiền</span>
+                <span class="price">${vnd(infoProduct.price)}</span>
+            </div>
+            <div class="modal-footer-control">
+                <button class="button-dathangngay" data-product="${infoProduct.id}">Đặt hàng ngay</button>
+                <button class="button-dat" id="add-cart" onclick="animationCart()"><i class="fa-light fa-basket-shopping"></i></button>
+            </div>
+        </div>`;
+    }
+
+    // --- RÁP HTML VÀO POPUP ---
+    let modalHtml = `
+    <div class="modal-header">
+        <img class="product-image" src="${infoProduct.img}" alt="">
     </div>
     <div class="modal-body">
         <h2 class="product-title">${infoProduct.title}</h2>
@@ -82,67 +114,59 @@ function detailProduct(index) {
             <div class="priceBox">
                 <span class="current-price">${vnd(infoProduct.price)}</span>
             </div>
-            <div class="buttons_added">
-                <input class="minus is-form" type="button" value="-" onclick="decreasingNumber(this)">
-                <input class="input-qty" max="${infoProduct.quantity}" min="1" name="" type="number" value="1">
-                <input class="plus is-form" type="button" value="+" onclick="increasingNumber(this)">
-            </div>
+            ${quantityHtml}
         </div>
         <p style="margin-bottom: 10px; color: #666;">Tồn kho: <b>${infoProduct.quantity}</b> sản phẩm</p>
         <p class="product-description">${infoProduct.desc}</p>
     </div>
-    <div class="notebox">
-            <p class="notebox-title">Ghi chú</p>
-            <textarea class="text-note" id="popup-detail-note" placeholder="Nhập thông tin cần lưu ý..."></textarea>
-    </div>
-    <div class="modal-footer">
-        <div class="price-total">
-            <span class="thanhtien">Thành tiền</span>
-            <span class="price">${vnd(infoProduct.price)}</span>
-        </div>
-        ${buttonsHtml} </div>`;
+    ${noteHtml}
+    ${footerHtml}
+    `;
 
     document.querySelector('#product-detail-content').innerHTML = modalHtml;
     modal.classList.add('open');
     body.style.overflow = "hidden";
 
-    // Cập nhật giá tiền khi tăng giảm 
-    let tgbtn = document.querySelectorAll('.is-form');
-    let qty = document.querySelector('.product-control .input-qty');
-    let priceText = document.querySelector('.price');
-    tgbtn.forEach(element => {
-        element.addEventListener('click', () => {
-            let price = infoProduct.price * parseInt(qty.value);
-            priceText.innerHTML = vnd(price);
-        });
-    });
+    // --- SỰ KIỆN (CHỈ GÁN NẾU LÀ KHÁCH HÀNG) ---
+    if (!isAdmin) {
+        // Cập nhật giá tiền khi tăng giảm 
+        let tgbtn = document.querySelectorAll('.is-form');
+        let qty = document.querySelector('.product-control .input-qty');
+        let priceText = document.querySelector('.price');
+        
+        if (tgbtn) {
+            tgbtn.forEach(element => {
+                element.addEventListener('click', () => {
+                    let price = infoProduct.price * parseInt(qty.value);
+                    priceText.innerHTML = vnd(price);
+                });
+            });
+        }
 
-    // --- CÁC SỰ KIỆN NÚT BẤM (Đã có sẵn check if nên không sợ lỗi) ---
+        // Sự kiện nút Thêm vào giỏ
+        let productbtn = document.querySelector('.button-dat');
+        if (productbtn) {
+            productbtn.addEventListener('click', (e) => {
+                addCart(infoProduct.id);
+            })
+        }
 
-    // Sự kiện nút Thêm vào giỏ
-    let productbtn = document.querySelector('.button-dat');
-    if (productbtn) { // Nếu nút tồn tại (không phải admin) thì mới gán sự kiện
-        productbtn.addEventListener('click', (e) => {
-            addCart(infoProduct.id);
-        })
-    }
-
-    // Sự kiện nút Mua ngay
-    let orderNowBtn = document.querySelector('.button-dathangngay');
-    if (orderNowBtn) { // Nếu nút tồn tại (không phải admin) thì mới gán sự kiện
-        orderNowBtn.addEventListener('click', (e) => {
-            if (localStorage.getItem('currentuser')) {
-                // Kiểm tra nếu số lượng mua > tồn kho
-                if (parseInt(qty.value) > infoProduct.quantity) {
-                    toast({ title: 'Lỗi', message: 'Sản phẩm không đủ số lượng!', type: 'error', duration: 3000 });
-                    return;
+        // Sự kiện nút Mua ngay
+        let orderNowBtn = document.querySelector('.button-dathangngay');
+        if (orderNowBtn) {
+            orderNowBtn.addEventListener('click', (e) => {
+                if (localStorage.getItem('currentuser')) {
+                    if(parseInt(qty.value) > infoProduct.quantity) {
+                        toast({ title: 'Lỗi', message: 'Sản phẩm không đủ số lượng!', type: 'error', duration: 3000 });
+                        return;
+                    }
+                    dathangngay(); 
+                } else {
+                    toast({ title: 'Warning', message: 'Vui lòng đăng nhập để mua hàng !', type: 'warning', duration: 3000 });
+                    openLoginModal();
                 }
-                dathangngay();
-            } else {
-                toast({ title: 'Warning', message: 'Vui lòng đăng nhập để mua hàng !', type: 'warning', duration: 3000 });
-                openLoginModal();
-            }
-        })
+            })
+        }
     }
 }
 
