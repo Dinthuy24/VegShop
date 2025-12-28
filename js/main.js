@@ -416,6 +416,39 @@ function closeCart() {
     updateAmount();
 }
 
+document.querySelector(".filter-btn").addEventListener("click", (e) => {
+    e.preventDefault();
+    document.querySelector(".advanced-search").classList.toggle("open");
+})
+
+document.querySelector(".form-search-input").addEventListener("click", (e) => {
+    e.preventDefault();
+})
+
+function closeSearchAdvanced() {
+    document.querySelector(".advanced-search").classList.toggle("open");
+}
+
+function openSearchMb() {
+    document.querySelector(".header-middle-left").style.display = "none";
+    document.querySelector(".header-middle-center").style.display = "block";
+    document.querySelector(".header-middle-right-item.close").style.display = "block";
+    let liItem = document.querySelectorAll(".header-middle-right-item.open");
+    for (let i = 0; i < liItem.length; i++) {
+        liItem[i].style.setProperty("display", "none", "important")
+    }
+}
+
+function closeSearchMb() {
+    document.querySelector(".header-middle-left").style.display = "block";
+    document.querySelector(".header-middle-center").style.display = "none";
+    document.querySelector(".header-middle-right-item.close").style.display = "none";
+    let liItem = document.querySelectorAll(".header-middle-right-item.open");
+    for (let i = 0; i < liItem.length; i++) {
+        liItem[i].style.setProperty("display", "block", "important")
+    }
+}
+
 function openLoginModal() {
     let formsg = document.querySelector('.modal.signup-login');
     let container = document.querySelector('.signup-login .modal-container');
