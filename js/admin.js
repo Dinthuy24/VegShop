@@ -280,39 +280,43 @@ if (btnAddProduct) {
 let btnAddProductIn = document.getElementById("add-product-button");
 if (btnAddProductIn) {
     btnAddProductIn.addEventListener("click", (e) => {
-        e.preventDefault();
-        let imgProduct = document.querySelector(".upload-image-preview").src;
-        let tenMon = document.getElementById("ten-san-pham").value;
-        let price = document.getElementById("gia-moi").value;
-        let moTa = document.getElementById("mo-ta").value;
-        let categoryText = document.getElementById("chon-san-pham").value;
+    e.preventDefault();
+    let imgProduct = document.querySelector(".upload-image-preview").src;
+    let tenMon = document.getElementById("ten-san-pham").value;
+    let price = document.getElementById("gia-moi").value;
 
-        if (tenMon == "" || price == "" || moTa == "" || soluong == "") { 
-            toast({ title: "Chú ý", message: "Vui lòng nhập đầy đủ thông tin món!", type: "warning", duration: 3000 });
+
+    let soluong = document.getElementById("so-luong").value; 
+
+    let moTa = document.getElementById("mo-ta").value;
+    let categoryText = document.getElementById("chon-san-pham").value;
+
+    if (tenMon == "" || price == "" || moTa == "" || soluong == "") { 
+        toast({ title: "Chú ý", message: "Vui lòng nhập đầy đủ thông tin món!", type: "warning", duration: 3000 });
+    } else {
+        if (isNaN(price)) {
+            toast({ title: "Chú ý", message: "Giá phải ở dạng số!", type: "warning", duration: 3000 });
         } else {
-            if (isNaN(price)) {
-                toast({ title: "Chú ý", message: "Giá phải ở dạng số!", type: "warning", duration: 3000 });
-            } else {
-                let products = localStorage.getItem("products") ? JSON.parse(localStorage.getItem("products")) : [];
-                let product = {
-                    id: createId(products),
-                    title: tenMon,
-                    img: imgProduct,
-                    category: categoryText,
-                    price: parseInt(price),
-                    quantity: parseInt(soluong),
-                    desc: moTa,
-                    status: 1
-                };
-                products.unshift(product);
-                localStorage.setItem("products", JSON.stringify(products));
-                showProduct();
-                document.querySelector(".add-product").classList.remove("open");
-                toast({ title: "Success", message: "Thêm sản phẩm thành công!", type: "success", duration: 3000 });
-                setDefaultValue();
-            }
+            let products = localStorage.getItem("products") ? JSON.parse(localStorage.getItem("products")) : [];
+            let product = {
+                id: createId(products),
+                title: tenMon,
+                img: imgProduct,
+                category: categoryText,
+                price: parseInt(price),
+                quantity: parseInt(soluong), // Biến soluong giờ đã có giá trị
+                desc: moTa,
+                status: 1
+            };
+            products.unshift(product);
+            localStorage.setItem("products", JSON.stringify(products));
+            showProduct();
+            document.querySelector(".add-product").classList.remove("open");
+            toast({ title: "Success", message: "Thêm sản phẩm thành công!", type: "success", duration: 3000 });
+            setDefaultValue();
         }
-    });
+    }
+});
 }
 
 // Mở popup Sửa sản phẩm
